@@ -1,0 +1,15 @@
+# Proguard rules for RegainPlus debug (R8 minify)
+-keep class com.regainplus.** { *; }
+-keep class dagger.hilt.android.** { *; }
+-keep class androidx.lifecycle.** { *; }
+-keep class androidx.navigation.** { *; }
+-keep class androidx.compose.** { *; }
+-keep class kotlinx.coroutines.** { *; }
+-keep class com.google.android.gms.** { *; }
+-dontwarn androidx.emoji2.**
+-dontwarn androidx.datastore.**
+-dontwarn androidx.glassify.**
+-dontwarn androidx.graphics.**
+-dontwarn androidx.vectordrawable.**
+-dontwarn com.google.dagger.hilt.android.**
+-dontwarn androidx.startup.*
