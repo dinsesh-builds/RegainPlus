@@ -3,6 +3,7 @@ package com.regainplus.ui.screens
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -25,7 +26,7 @@ import java.util.Date
 import java.util.Locale
 
 @Composable
-fun StudyScreen(studyVm: StudyViewModel = hiltViewModel(), blockVm: BlockViewModel = hiltViewModel()) {
+fun StudyScreen(studyVm: StudyViewModel = hiltViewModel(), blockVm: BlockViewModel = hiltViewModel(), navController: androidx.navigation.NavHostController? = null) {
     val sessions by studyVm.sessions.collectAsState()
     val blocked by blockVm.items.collectAsState()
     val studyItems = blocked.filter { it.kind == "study" }
@@ -69,12 +70,15 @@ fun StudyScreen(studyVm: StudyViewModel = hiltViewModel(), blockVm: BlockViewMod
     val canStop = com.regainplus.service.FocusTimerHolder.canStop
 
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
-        // Regain-style circular focus ring with countdown
+        // Circular focus ring with countdown
         Box(Modifier.fillMaxWidth().padding(top = 24.dp), contentAlignment = Alignment.Center) {
+            val trackColor = MaterialTheme.colorScheme.surfaceContainerHighest
+            val focusColor = MaterialTheme.colorScheme.secondary
+            val breakColor = MaterialTheme.colorScheme.primary
             Canvas(Modifier.size(200.dp)) {
                 val stroke = 24.dp.toPx(); val inset = stroke / 2
-                drawArc(Color(0xFF23281F), -90f, 360f, false, style = Stroke(stroke, cap = StrokeCap.Round), topLeft = Offset(inset, inset), size = Size(size.width - stroke, size.height - stroke))
-                drawArc(if (isBreak) Color(0xFF83D65C) else Color(0xFF3593E0), -90f, 360f * ringProgress, false, style = Stroke(stroke, cap = StrokeCap.Round), topLeft = Offset(inset, inset), size = Size(size.width - stroke, size.height - stroke))
+                drawArc(trackColor, -90f, 360f, false, style = Stroke(stroke, cap = StrokeCap.Round), topLeft = Offset(inset, inset), size = Size(size.width - stroke, size.height - stroke))
+                drawArc(if (isBreak) breakColor else focusColor, -90f, 360f * ringProgress, false, style = Stroke(stroke, cap = StrokeCap.Round), topLeft = Offset(inset, inset), size = Size(size.width - stroke, size.height - stroke))
             }
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text("%02d:%02d".format(remaining / 60, remaining % 60), style = MaterialTheme.typography.displayMedium, fontWeight = FontWeight.Bold)
@@ -95,7 +99,7 @@ fun StudyScreen(studyVm: StudyViewModel = hiltViewModel(), blockVm: BlockViewMod
         }
         Spacer(Modifier.height(12.dp))
 
-        // White pill CTA
+        // Focus CTA
         Surface(
             Modifier.fillMaxWidth().padding(horizontal = 20.dp).clickable {
                 if (!running) com.regainplus.service.FocusTimerHolder.start(ctx)
@@ -105,7 +109,9 @@ fun StudyScreen(studyVm: StudyViewModel = hiltViewModel(), blockVm: BlockViewMod
                     subject = ""; notes = ""
                 }
             },
-            shape = RoundedCornerShape(28.dp), color = Color.White, shadowElevation = 4.dp
+            shape = RoundedCornerShape(28.dp),
+            color = MaterialTheme.colorScheme.primaryContainer,
+            shadowElevation = 2.dp
         ) {
             Row(Modifier.padding(start = 24.dp, end = 8.dp, top = 10.dp, bottom = 10.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text(
@@ -115,10 +121,22 @@ fun StudyScreen(studyVm: StudyViewModel = hiltViewModel(), blockVm: BlockViewMod
                         strict -> "Locked by strict mode"
                         else -> "Stop & save session"
                     },
-                    color = Color(0xFF111412), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f)
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.weight(1f)
                 )
-                Surface(shape = RoundedCornerShape(28.dp), color = if (running && !canStop) Color(0xFF9AA398) else Color(0xFF83D65C)) {
-                    Text(if (running && canStop) "■" else "▶", color = Color.White, modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp), fontWeight = FontWeight.Bold)
+                val actionEnabled = !running || canStop
+                Surface(
+                    shape = RoundedCornerShape(28.dp),
+                    color = if (actionEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
+                ) {
+                    Text(
+                        if (running && canStop) "■" else "▶",
+                        color = if (actionEnabled) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.surface,
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+                        fontWeight = FontWeight.Bold
+                    )
                 }
             }
         }
@@ -161,6 +179,88 @@ fun StudyScreen(studyVm: StudyViewModel = hiltViewModel(), blockVm: BlockViewMod
                             .clickable { ctx.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(url))) }
                             .padding(vertical = 4.dp)
                     )
+                }
+
+                Spacer(Modifier.height(12.dp))
+                HorizontalDivider()
+                Spacer(Modifier.height(12.dp))
+                Text("YouTube (Educational, curated)", style = MaterialTheme.typography.titleSmall)
+                Text(
+                    "Curated educational videos only. Search within this library and play in a restricted in-app browser (ads may appear; no other videos).",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                data class EduVideo(val id: String, val title: String, val subject: String, val channel: String)
+                val curatedVideos = remember {
+                    try {
+                        val json = ctx.assets.open("youtube_edu.json").bufferedReader().use { it.readText() }
+                        val arr = org.json.JSONArray(json)
+                        List(arr.length()) { i ->
+                            val o = arr.getJSONObject(i)
+                            EduVideo(
+                                id = o.optString("id"),
+                                title = o.optString("title"),
+                                subject = o.optString("subject"),
+                                channel = o.optString("channel")
+                            )
+                        }.filter { it.id.isNotBlank() && it.title.isNotBlank() }
+                    } catch (_: Exception) {
+                        emptyList<EduVideo>()
+                    }
+                }
+                val subjects = remember(curatedVideos) { listOf("All") + curatedVideos.map { it.subject }.distinct().sorted() }
+                var ytSearch by remember { mutableStateOf("") }
+                var ytSubject by remember { mutableStateOf("All") }
+
+                Spacer(Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = ytSearch,
+                    onValueChange = { ytSearch = it },
+                    label = { Text("Search curated videos") },
+                    placeholder = { Text("Title, subject, or channel") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+                Spacer(Modifier.height(8.dp))
+                Row(
+                    Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    subjects.forEach { s ->
+                        FilterChip(selected = ytSubject == s, onClick = { ytSubject = s }, label = { Text(s, maxLines = 1) })
+                    }
+                }
+                Spacer(Modifier.height(8.dp))
+                val filtered = curatedVideos.filter { v ->
+                    (ytSubject == "All" || v.subject == ytSubject) &&
+                        (ytSearch.isBlank() || listOf(v.title, v.subject, v.channel).any { it.contains(ytSearch, ignoreCase = true) })
+                }
+                if (filtered.isEmpty()) {
+                    Text("No matching videos in the curated library.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                } else {
+                    filtered.take(30).forEach { v ->
+                        Card(
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 3.dp)
+                                .clickable(enabled = navController != null) {
+                                    val route = "youtube_edu?videoId=" + java.net.URLEncoder.encode(v.id, "UTF-8") +
+                                        "&title=" + java.net.URLEncoder.encode(v.title, "UTF-8")
+                                    navController?.navigate(route)
+                                },
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh)
+                        ) {
+                            Column(Modifier.padding(10.dp)) {
+                                Text(v.title, style = MaterialTheme.typography.bodyMedium, maxLines = 2, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                                Spacer(Modifier.height(2.dp))
+                                Text("${v.subject} • ${v.channel}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                                if (navController == null) {
+                                    Text("Open Study screen in app to play", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }

@@ -60,12 +60,12 @@ fun WardrobeScreen(vm: WardrobeViewModel = hiltViewModel(), outfitsVm: OutfitsVi
         }
     }
     Column(Modifier.fillMaxSize()) {
-        TabRow(selectedTabIndex = tab) {
-            Tab(selected = tab == 0, onClick = { tab = 0 }, text = { Text("Items") })
-            Tab(selected = tab == 1, onClick = { tab = 1 }, text = { Text("Outfits") })
-            Tab(selected = tab == 2, onClick = { tab = 2 }, text = { Text("Style") })
-            Tab(selected = tab == 3, onClick = { tab = 3 }, text = { Text("Declutter") })
-            Tab(selected = tab == 4, onClick = { tab = 4 }, text = { Text("Capsules") })
+        ScrollableTabRow(selectedTabIndex = tab, edgePadding = 16.dp) {
+            Tab(selected = tab == 0, onClick = { tab = 0 }, text = { Text("Items", maxLines = 1) })
+            Tab(selected = tab == 1, onClick = { tab = 1 }, text = { Text("Outfits", maxLines = 1) })
+            Tab(selected = tab == 2, onClick = { tab = 2 }, text = { Text("Style", maxLines = 1) })
+            Tab(selected = tab == 3, onClick = { tab = 3 }, text = { Text("Declutter", maxLines = 1) })
+            Tab(selected = tab == 4, onClick = { tab = 4 }, text = { Text("Capsules", maxLines = 1) })
         }
         Column(Modifier.padding(16.dp).weight(1f).verticalScroll(rememberScrollState())) {
             when (tab) {
@@ -124,8 +124,8 @@ fun WardrobeScreen(vm: WardrobeViewModel = hiltViewModel(), outfitsVm: OutfitsVi
                                         ) {
                                             Text(w.name.take(1).uppercase(), style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.primary, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
                                         }
-                                        Text(w.name, style = MaterialTheme.typography.titleSmall, maxLines = 1)
-                                        Text(w.color.ifBlank { "—" }, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        Text(w.name, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                        Text(w.color.ifBlank { "—" }, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
                                     }
                                 }
                             }
@@ -246,7 +246,7 @@ fun WardrobeScreen(vm: WardrobeViewModel = hiltViewModel(), outfitsVm: OutfitsVi
                     stale.forEach { w ->
                         Card(Modifier.fillMaxWidth().padding(vertical = 3.dp), shape = androidx.compose.foundation.shape.RoundedCornerShape(14.dp)) {
                             Row(Modifier.padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
-                                Column(Modifier.weight(1f)) {
+                                Column(Modifier.weight(1f).padding(end = 8.dp)) {
                                     Text("${w.name} · ${w.type}", style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
                                     Text(
                                         w.lastWorn?.let { "Last worn ${java.text.SimpleDateFormat("MMM d, yyyy", java.util.Locale.US).format(java.util.Date(it))}" } ?: "Never worn",
@@ -256,8 +256,8 @@ fun WardrobeScreen(vm: WardrobeViewModel = hiltViewModel(), outfitsVm: OutfitsVi
                                         overflow = TextOverflow.Ellipsis
                                     )
                                 }
-                                Column(horizontalAlignment = Alignment.End) {
-                                    TextButton(onClick = { vm.markWorn(w.id) }, contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)) { Text("Wore it") }
+                                Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(0.dp)) {
+                                    TextButton(onClick = { vm.markWorn(w.id) }, contentPadding = PaddingValues(horizontal = 6.dp, vertical = 0.dp)) { Text("Wore it", maxLines = 1) }
                                     ConfirmDeleteButton(onConfirm = { vm.delete(w.id) }, label = "Let go")
                                 }
                             }

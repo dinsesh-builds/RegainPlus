@@ -25,6 +25,7 @@ class RegainPlusApp : Application() {
         ScheduleHolder.init(this)
         NotificationBlockHolder.init(this)
         BlockMonitorService.sync(this)
+        com.regainplus.service.FocusAlarmScheduler.rescheduleAll(this)
         scheduleDailyReminder(this, prefs.getBoolean("notif_daily", true))
         scheduleRestDayReminder(this, prefs.getBoolean("notif_rest", false))
         syncWatchdog(this)

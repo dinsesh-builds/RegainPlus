@@ -80,7 +80,7 @@ object BlockOverlayWindow {
         val params = WindowManager.LayoutParams(
             WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.MATCH_PARENT,
             type,
-            WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,
+            WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
             Color.TRANSPARENT
         ).apply { gravity = Gravity.CENTER }
         try { manager.addView(root, params); view = root; wm = manager; blockedPkg = pkg } catch (_: Exception) {}

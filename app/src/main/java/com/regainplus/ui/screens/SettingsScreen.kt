@@ -128,16 +128,6 @@ fun SettingsScreen(vm: SettingsViewModel = hiltViewModel(), exportVm: ExportView
                 FilterChip(selected = font == v, onClick = { vm.updateFontScale(v) }, label = { Text(l) })
             }
         }
-        Spacer(Modifier.height(12.dp))
-        Text("Ambient background", style = MaterialTheme.typography.titleMedium)
-        val ambient by com.regainplus.ui.theme.ThemePrefs.ambient.collectAsState()
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            listOf("none" to "None", "aurora" to "Aurora", "sunset" to "Sunset", "forest" to "Forest").forEach { (v, l) ->
-                FilterChip(selected = ambient == v, onClick = { vm.updateAmbient(v) }, label = { Text(l) })
-            }
-        }
-        Spacer(Modifier.height(6.dp))
-        if (ambient != "none") Text("Ambient tint applies on Home", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
 
         Spacer(Modifier.height(12.dp))
         Text("Quiet hours (no reminders from hour)", style = MaterialTheme.typography.titleMedium)

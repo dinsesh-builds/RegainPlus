@@ -148,9 +148,9 @@ fun BlockScreen(vm: BlockViewModel = hiltViewModel()) {
         Spacer(Modifier.height(12.dp))
         Text("Block websites (optional)", style = MaterialTheme.typography.titleSmall)
         Text("Site entries are matched against browser URLs via accessibility. Use plain domains (e.g. example.com).", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Website domain") }, modifier = Modifier.weight(1f), singleLine = true)
-            Button(onClick = { if (name.isNotBlank()) { vm.add("site", name); name = "" } }) { Text("Add site") }
+        Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+            OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Website domain") }, placeholder = { Text("example.com") }, modifier = Modifier.weight(1f).fillMaxHeight(), singleLine = true)
+            Button(onClick = { if (name.isNotBlank()) { vm.add("site", name); name = "" } }, modifier = Modifier.fillMaxHeight()) { Text("Add site") }
         }
         blockedItems.filter { it.kind == "site" }.forEach { b ->
             Row(Modifier.fillMaxWidth().padding(vertical = 2.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
@@ -255,13 +255,27 @@ fun BlockScreen(vm: BlockViewModel = hiltViewModel()) {
         Text("Schedule-based blocking", style = MaterialTheme.typography.titleMedium)
         Text("Block an app only during a time window on selected days.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(Modifier.height(8.dp))
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            OutlinedTextField(value = schedPkg, onValueChange = { schedPkg = it }, label = { Text("Package") }, modifier = Modifier.weight(1f), singleLine = true)
-            OutlinedButton(onClick = { showPicker = true }) { Text("Pick") }
+        Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+            OutlinedTextField(value = schedPkg, onValueChange = { schedPkg = it }, label = { Text("Package") }, modifier = Modifier.weight(1f).fillMaxHeight(), singleLine = true)
+            OutlinedButton(onClick = { showPicker = true }, modifier = Modifier.fillMaxHeight()) { Text("Pick") }
         }
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            OutlinedTextField(value = schedStart, onValueChange = { schedStart = it }, label = { Text("Start HH:mm") }, modifier = Modifier.weight(1f), singleLine = true)
-            OutlinedTextField(value = schedEnd, onValueChange = { schedEnd = it }, label = { Text("End HH:mm") }, modifier = Modifier.weight(1f), singleLine = true)
+            OutlinedTextField(
+                value = schedStart,
+                onValueChange = { schedStart = it },
+                label = { Text("Start") },
+                placeholder = { Text("HH:mm") },
+                modifier = Modifier.weight(1f),
+                singleLine = true
+            )
+            OutlinedTextField(
+                value = schedEnd,
+                onValueChange = { schedEnd = it },
+                label = { Text("End") },
+                placeholder = { Text("HH:mm") },
+                modifier = Modifier.weight(1f),
+                singleLine = true
+            )
         }
         Spacer(Modifier.height(4.dp))
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {

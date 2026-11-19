@@ -63,6 +63,7 @@ import com.regainplus.ui.screens.SkillsScreen
 import com.regainplus.ui.screens.StudyScreen
 import com.regainplus.ui.screens.TasksScreen
 import com.regainplus.ui.screens.WardrobeScreen
+import com.regainplus.ui.screens.YouTubeEduScreen
 
 sealed class Screen(val route: String, val label: String) {
     object Home : Screen("home", "Home")
@@ -133,7 +134,7 @@ fun RegainNavHost(navController: NavHostController) {
         }
     ) {
         composable(Screen.Home.route) { HomeScreen(navController = navController) }
-        composable(Screen.Study.route) { StudyScreen() }
+        composable(Screen.Study.route) { StudyScreen(navController = navController) }
         composable(Screen.Tasks.route) { TasksScreen() }
         composable(Screen.Block.route) { BlockScreen() }
         composable(Screen.Body.route) { BodyScreen() }
@@ -150,6 +151,11 @@ fun RegainNavHost(navController: NavHostController) {
         composable(Screen.Achievements.route) { AchievementsScreen() }
         composable(Screen.Settings.route) { SettingsScreen() }
         composable(Screen.More.route) { MoreScreen(navController = navController) }
+        composable("youtube_edu?videoId={videoId}&title={title}") { backStackEntry ->
+            val videoId = backStackEntry.arguments?.getString("videoId") ?: ""
+            val title = java.net.URLDecoder.decode(backStackEntry.arguments?.getString("title") ?: "", "UTF-8")
+            YouTubeEduScreen(videoId = videoId, title = title, onBack = { navController.popBackStack() })
+        }
     }
 }
 

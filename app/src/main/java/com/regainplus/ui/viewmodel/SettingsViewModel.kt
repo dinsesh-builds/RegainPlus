@@ -13,11 +13,9 @@ class SettingsViewModel @Inject constructor(@ApplicationContext private val ctx:
     val accent get() = com.regainplus.ui.theme.ThemePrefs.accent.value
     val fontScale get() = com.regainplus.ui.theme.ThemePrefs.fontScale.value
     val corners get() = com.regainplus.ui.theme.ThemePrefs.corners.value
-    val ambient get() = com.regainplus.ui.theme.ThemePrefs.ambient.value
 
     fun updateTheme(v: String) = com.regainplus.ui.theme.ThemePrefs.setTheme(ctx, v)
     fun updateAccent(v: String) = com.regainplus.ui.theme.ThemePrefs.setAccent(ctx, v)
     fun updateFontScale(v: Float) = com.regainplus.ui.theme.ThemePrefs.setFontScale(ctx, v)
     fun updateCorners(v: String) = com.regainplus.ui.theme.ThemePrefs.setCorners(ctx, v)
-    fun updateAmbient(v: String) = com.regainplus.ui.theme.ThemePrefs.setAmbient(ctx, v)
 }

@@ -54,43 +54,44 @@ fun HomeScreen(
     var alarmKey by remember { mutableStateOf(0) }
     val planPrefs = remember { ctx.getSharedPreferences("random_plan", android.content.Context.MODE_PRIVATE) }
     var dailyPlan by remember { mutableStateOf(planPrefs.getString("plan", "") ?: "") }
-    val lifecycle = androidx.compose.ui.platform.LocalLifecycleOwner.current
-    androidx.compose.runtime.DisposableEffect(lifecycle) {
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    androidx.compose.runtime.DisposableEffect(lifecycleOwner) {
         val observer = androidx.lifecycle.LifecycleEventObserver { _, e ->
             if (e == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
                 a11yEnabled = isA11y(ctx)
                 overlayOk = android.provider.Settings.canDrawOverlays(ctx)
             }
         }
-        lifecycle.lifecycle.addObserver(observer)
-        onDispose { lifecycle.lifecycle.removeObserver(observer) }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
     val ringProgress = (streak.coerceAtMost(7).toFloat() / 7f)
 
-    val ambient by com.regainplus.ui.theme.ThemePrefs.ambient.collectAsState()
-    val ambientTint = when (ambient) {
-        "aurora" -> Color(0xFF101C2E)
-        "sunset" -> Color(0xFF2A1713)
-        "forest" -> Color(0xFF10231A)
-        else -> MaterialTheme.colorScheme.background
-    }
-    Column(Modifier.fillMaxSize().background(ambientTint).padding(horizontal = 20.dp).verticalScroll(rememberScrollState())) {
+    Column(
+        Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .padding(horizontal = 20.dp)
+            .verticalScroll(rememberScrollState())
+    ) {
         Spacer(Modifier.height(16.dp))
 
         // Ring (Regain-style focus ring)
         Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+            val trackColor = MaterialTheme.colorScheme.surfaceContainerHighest
+            val progressColor = MaterialTheme.colorScheme.primary
             Canvas(Modifier.size(190.dp)) {
                 val stroke = 26.dp.toPx()
                 val inset = stroke / 2
                 drawArc(
-                    color = Color(0xFF23281F),
+                    color = trackColor,
                     startAngle = -90f, sweepAngle = 360f, useCenter = false,
                     style = Stroke(stroke, cap = StrokeCap.Round),
                     topLeft = Offset(inset, inset),
                     size = Size(size.width - stroke, size.height - stroke)
                 )
                 drawArc(
-                    color = Color(0xFF83D65C),
+                    color = progressColor,
                     startAngle = -90f, sweepAngle = 360f * ringProgress, useCenter = false,
                     style = Stroke(stroke, cap = StrokeCap.Round),
                     topLeft = Offset(inset, inset),
@@ -187,6 +188,7 @@ fun HomeScreen(
             mutableStateOf(List(4) { i -> schedPrefs.getString("slot_time_$i", defaultTimes[i]) ?: defaultTimes[i] })
         }
         var editSlot by remember { mutableStateOf<Int?>(null) }
+        var display24h by remember { mutableStateOf(schedPrefs.getBoolean("time_24h", false)) }
 
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Text("Suggested schedule", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f))
@@ -198,7 +200,7 @@ fun HomeScreen(
                 Card(
                     Modifier.clickable { slotIdx = i },
                     shape = RoundedCornerShape(18.dp),
-                    colors = CardDefaults.cardColors(containerColor = if (i == slotIdx) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh)
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh)
                 ) {
                     Column(Modifier.padding(14.dp).width(160.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -206,19 +208,23 @@ fun HomeScreen(
                             TextButton(onClick = { editSlot = i }, contentPadding = PaddingValues(horizontal = 6.dp, vertical = 0.dp)) { Text("Edit") }
                         }
                         Spacer(Modifier.height(2.dp))
-                        Text(slotTimes[i], style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+                        Text(formatDisplayRange(slotTimes[i], display24h), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
                         Text("${weekdays.count { it == '1' }} days", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
                         val alarmSet = remember(alarmKey, slotTimes) { com.regainplus.service.FocusAlarmScheduler.all(ctx).any { it.slot == i } }
-                        TextButton(onClick = {
-                            if (alarmSet) {
-                                com.regainplus.service.FocusAlarmScheduler.remove(ctx, i)
-                            } else {
-                                val hm = slotTimes[i].split("-").first().split(":")
-                                val alarm = com.regainplus.service.FocusAlarmScheduler.Alarm(i, hm.getOrNull(0)?.toIntOrNull() ?: 9, hm.getOrNull(1)?.toIntOrNull() ?: 0, weekdays)
-                                com.regainplus.service.FocusAlarmScheduler.add(ctx, alarm)
-                            }
-                            alarmKey++
-                        }) { Text(if (alarmSet) "Alarm ✓ (tap to remove)" else "Set alarm") }
+                        TextButton(
+                            onClick = {
+                                if (alarmSet) {
+                                    com.regainplus.service.FocusAlarmScheduler.remove(ctx, i)
+                                } else {
+                                    val hm = slotTimes[i].split("-").first().split(":")
+                                    val alarm = com.regainplus.service.FocusAlarmScheduler.Alarm(i, hm.getOrNull(0)?.toIntOrNull() ?: 9, hm.getOrNull(1)?.toIntOrNull() ?: 0, weekdays)
+                                    com.regainplus.service.FocusAlarmScheduler.add(ctx, alarm)
+                                }
+                                alarmKey++
+                            },
+                            contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) { Text(if (alarmSet) "Remove alarm" else "Set alarm", maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis) }
                     }
                 }
             }
@@ -234,6 +240,7 @@ fun HomeScreen(
             var endM by remember(i, slotTimes) { mutableIntStateOf(initEndM) }
             var pickingStart by remember(i) { mutableStateOf(false) }
             var pickingEnd by remember(i) { mutableStateOf(false) }
+            var use24Hour by remember { mutableStateOf(schedPrefs.getBoolean("time_24h", false)) }
 
             AlertDialog(
                 onDismissRequest = { editSlot = null },
@@ -252,16 +259,24 @@ fun HomeScreen(
                         Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
                             TimePickCard(
                                 label = "Start",
-                                time = formatHm(startH, startM),
+                                time = formatDisplayTime(startH, startM, use24Hour),
                                 modifier = Modifier.weight(1f),
                                 onClick = { pickingStart = true }
                             )
                             TimePickCard(
                                 label = "End",
-                                time = formatHm(endH, endM),
+                                time = formatDisplayTime(endH, endM, use24Hour),
                                 modifier = Modifier.weight(1f),
                                 onClick = { pickingEnd = true }
                             )
+                        }
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("24-hour format", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f))
+                            Switch(checked = use24Hour, onCheckedChange = {
+                                use24Hour = it
+                                display24h = it
+                                schedPrefs.edit().putBoolean("time_24h", it).apply()
+                            })
                         }
                         Text(
                             "Alarm uses the start time",
@@ -300,6 +315,7 @@ fun HomeScreen(
                 TimePickerDialogWrap(
                     initialHour = startH,
                     initialMinute = startM,
+                    is24Hour = use24Hour,
                     onDismiss = { pickingStart = false },
                     onConfirm = { h, m -> startH = h; startM = m; pickingStart = false }
                 )
@@ -308,6 +324,7 @@ fun HomeScreen(
                 TimePickerDialogWrap(
                     initialHour = endH,
                     initialMinute = endM,
+                    is24Hour = use24Hour,
                     onDismiss = { pickingEnd = false },
                     onConfirm = { h, m -> endH = h; endM = m; pickingEnd = false }
                 )
@@ -321,8 +338,14 @@ fun HomeScreen(
                 FilterChip(selected = weekdays.getOrElse(i) { '0' } == '1', onClick = {
                     val arr = weekdays.toCharArray()
                     if (i < arr.size) arr[i] = if (arr[i] == '1') '0' else '1'
-                    weekdays = String(arr)
-                    schedPrefs.edit().putString("weekdays", weekdays).apply()
+                    val nw = String(arr)
+                    weekdays = nw
+                    schedPrefs.edit().putString("weekdays", nw).apply()
+                    // Keep existing slot alarms in sync with selected days
+                    com.regainplus.service.FocusAlarmScheduler.all(ctx).forEach { a ->
+                        com.regainplus.service.FocusAlarmScheduler.add(ctx, a.copy(days = nw))
+                    }
+                    alarmKey++
                 }, label = { Text(lbl) })
             }
         }
@@ -354,36 +377,47 @@ fun HomeScreen(
         }
 
         Spacer(Modifier.height(12.dp))
-        Text("Today's random plan", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
+        var showPlan by remember { mutableStateOf(dailyPlan.isNotBlank()) }
+        Surface(
+            Modifier.fillMaxWidth().clickable { showPlan = !showPlan },
+            shape = RoundedCornerShape(16.dp),
+            color = MaterialTheme.colorScheme.surfaceContainerLow
+        ) {
             Column(Modifier.padding(12.dp)) {
-                if (dailyPlan.isNotBlank()) Text(dailyPlan, style = MaterialTheme.typography.bodySmall)
-                else Text("Tap to generate a balanced day plan.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                TextButton(onClick = {
-                    val r = kotlin.random.Random
-                    val focus = listOf("25m deep work", "50m study sprint", "90m focus block").random(r)
-                    val gym = listOf("20m bodyweight circuit", "Push day (chest/shoulders)", "6k steps + mobility").random(r)
-                    val glow = listOf("Cold shower + grooming", "10-min declutter", "No junk content evening").random(r)
-                    val style = listOf("Plan outfit from closet", "Try a new colour combo", "Pick a Pinterest reference").random(r)
-                    dailyPlan = "Focus: $focus\nGym: $gym\nGlow: $glow\nStyle: $style"
-                    planPrefs.edit().putString("plan", dailyPlan).apply()
-                }) { Text(if (dailyPlan.isNotBlank()) "Regenerate" else "Surprise me") }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("Ideas for today", style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
+                    Text(if (showPlan) "Hide" else "Show", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                }
+                if (showPlan) {
+                    Spacer(Modifier.height(8.dp))
+                    if (dailyPlan.isNotBlank()) Text(dailyPlan, style = MaterialTheme.typography.bodySmall)
+                    else Text("Generate a simple plan when you want a nudge.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    TextButton(onClick = {
+                        val r = kotlin.random.Random
+                        val focus = listOf("25m deep work", "50m study sprint", "90m focus block").random(r)
+                        val gym = listOf("20m bodyweight circuit", "Push day (chest/shoulders)", "6k steps + mobility").random(r)
+                        val glow = listOf("Cold shower + grooming", "10-min declutter", "No junk content evening").random(r)
+                        val style = listOf("Plan outfit from closet", "Try a new colour combo", "Pick a Pinterest reference").random(r)
+                        dailyPlan = "Focus: $focus\nGym: $gym\nGlow: $glow\nStyle: $style"
+                        planPrefs.edit().putString("plan", dailyPlan).apply()
+                    }) { Text(if (dailyPlan.isNotBlank()) "Refresh ideas" else "Generate ideas") }
+                }
             }
         }
 
         Spacer(Modifier.weight(1f))
 
-        // White pill CTA (Regain-style)
+        // Focus CTA
         Surface(
             Modifier.fillMaxWidth().clickable { navController?.navigate("study") },
             shape = RoundedCornerShape(28.dp),
-            color = Color.White,
-            shadowElevation = 4.dp
+            color = MaterialTheme.colorScheme.primaryContainer,
+            shadowElevation = 2.dp
         ) {
             Row(Modifier.padding(start = 24.dp, end = 8.dp, top = 10.dp, bottom = 10.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text("Start focus timer", color = Color(0xFF111412), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-                Surface(shape = CircleShape, color = Color(0xFF83D65C)) {
-                    Icon(Icons.Filled.PlayArrow, contentDescription = "Start", tint = Color.White, modifier = Modifier.padding(12.dp))
+                Text("Start focus timer", color = MaterialTheme.colorScheme.onPrimaryContainer, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                Surface(shape = CircleShape, color = MaterialTheme.colorScheme.primary) {
+                    Icon(Icons.Filled.PlayArrow, contentDescription = "Start", tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.padding(12.dp))
                 }
             }
         }
@@ -418,10 +452,14 @@ private fun TimePickCard(label: String, time: String, modifier: Modifier = Modif
         shape = RoundedCornerShape(16.dp),
         color = MaterialTheme.colorScheme.surfaceContainerHigh
     ) {
-        Column(Modifier.padding(12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Column(
+            Modifier.padding(12.dp).heightIn(min = 72.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
             Spacer(Modifier.height(4.dp))
-            Text(time, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
+            Text(time, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary, maxLines = 1)
         }
     }
 }
@@ -431,13 +469,14 @@ private fun TimePickCard(label: String, time: String, modifier: Modifier = Modif
 private fun TimePickerDialogWrap(
     initialHour: Int,
     initialMinute: Int,
+    is24Hour: Boolean,
     onDismiss: () -> Unit,
     onConfirm: (Int, Int) -> Unit
 ) {
     val state = rememberTimePickerState(
         initialHour = initialHour.coerceIn(0, 23),
         initialMinute = initialMinute.coerceIn(0, 59),
-        is24Hour = false
+        is24Hour = is24Hour
     )
     Dialog(onDismissRequest = onDismiss) {
         Surface(
@@ -468,6 +507,26 @@ private fun TimePickerDialogWrap(
 }
 
 private fun formatHm(h: Int, m: Int): String = String.format(Locale.US, "%02d:%02d", h.coerceIn(0, 23), m.coerceIn(0, 59))
+
+private fun formatDisplayTime(h: Int, m: Int, is24Hour: Boolean): String {
+    val hh = h.coerceIn(0, 23)
+    val mm = m.coerceIn(0, 59)
+    return if (is24Hour) {
+        String.format(Locale.US, "%02d:%02d", hh, mm)
+    } else {
+        val amPm = if (hh < 12) "AM" else "PM"
+        val h12 = when (val x = hh % 12) { 0 -> 12; else -> x }
+        String.format(Locale.US, "%d:%02d %s", h12, mm, amPm)
+    }
+}
+
+private fun formatDisplayRange(range: String, is24Hour: Boolean): String {
+    val parts = range.split("-")
+    if (parts.size != 2) return range
+    val (sh, sm) = parseHm(parts[0], 6, 0)
+    val (eh, em) = parseHm(parts[1], 12, 0)
+    return "${formatDisplayTime(sh, sm, is24Hour)} - ${formatDisplayTime(eh, em, is24Hour)}"
+}
 
 private fun parseHm(value: String, fallbackH: Int, fallbackM: Int): Pair<Int, Int> {
     val parts = value.trim().split(":")

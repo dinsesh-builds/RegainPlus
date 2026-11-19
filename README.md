@@ -1,6 +1,6 @@
 # RegainPlus
 
-RegainPlus is a personal, offline-first Android app I built to keep focus, study, gym, wardrobe, skills, and a few mental-health tools in one place. It runs on-device, stores data locally, and doesn’t need an account or cloud setup.
+RegainPlus is a personal, offline-first app I’m building to keep focus, study, gym, wardrobe, skills, and a few mental-health tools in one place. The main app today is **Android** (on-device, local data, no account/cloud setup). This repo now also includes an **initial iOS version** (SwiftUI scaffold) in [`ios/`](ios/).
 
 This repo is shared as a study/open-source project. You’re welcome to read the code, try it, and change it for your own use.
 
@@ -16,14 +16,21 @@ This repo is shared as a study/open-source project. You’re welcome to read the
 
 Not everything is perfect, and behavior can vary by device/OEM (especially accessibility, background limits, and overlays on MIUI and similar skins).
 
-## Tech
+## Platforms
 
+### Android
 - Kotlin + Jetpack Compose (Material 3)
 - Room, Hilt, Navigation Compose, WorkManager, DataStore, Glance (widget)
-- Android target/compile SDK 34, min SDK 26
+- Accessibility/overlay/usage-access based focus & blocking features (device/OEM behavior varies)
+- Target/compile SDK 34, min SDK 26
 - Gradle 8.9, JDK 17+ (project has been built with JDK 21)
 
-## Build
+### iOS (initial)
+- SwiftUI app scaffold in `ios/RegainPlusIOS/` with core sections and RegainPlus branding
+- Early version / work in progress (not feature-parity with Android; some Android-only capabilities need iOS-specific implementations)
+- See [`ios/README.md`](ios/README.md) for setup notes
+
+## Build (Android)
 
 You’ll need Android SDK (platform 34, build-tools 34.0.0), JDK 17+ (21 recommended), and Gradle 8.9.
 
@@ -42,6 +49,10 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 ```
 
 `local.properties` is not included — point it to your local Android SDK path.
+
+## iOS
+
+See [`ios/README.md`](ios/README.md) for the initial iOS version and Xcode setup notes.
 
 ## Permissions & privacy
 

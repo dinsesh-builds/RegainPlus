@@ -81,10 +81,12 @@ class StreakWidget : GlanceAppWidget() {
             else -> ((focusMin.toFloat() / 60f).coerceIn(0f, 1f)) to "$focusMin / 60 min focus"
         }
 
-        val brandGreen = androidx.glance.color.ColorProvider(
-            androidx.compose.ui.graphics.Color(0xFF83D65C),
-            androidx.compose.ui.graphics.Color(0xFF83D65C)
-        )
+        val bg = fixed(0xFF20251F)        // RegainDarkCard
+        val container = fixed(0xFF2A3028)  // RegainDarkCardHi
+        val text = fixed(0xFFE8ECE6)       // RegainText
+        val muted = fixed(0xFFA3ADA0)      // RegainMuted
+        val brandGreen = fixed(0xFF83D65C) // RegainAccent
+        val border = fixed(0xFF2F362D)     // RegainBorder
 
         provideContent {
             GlanceTheme {
@@ -93,7 +95,7 @@ class StreakWidget : GlanceAppWidget() {
                         .fillMaxSize()
                         .appWidgetBackground()
                         .cornerRadius(28.dp)
-                        .background(GlanceTheme.colors.widgetBackground)
+                        .background(bg)
                         .clickable(actionStartActivity<MainActivity>())
                         .padding(14.dp)
                 ) {
@@ -119,14 +121,14 @@ class StreakWidget : GlanceAppWidget() {
                                     style = TextStyle(
                                         fontSize = 14.sp,
                                         fontWeight = FontWeight.Bold,
-                                        color = GlanceTheme.colors.onSurface
+                                        color = text
                                     )
                                 )
                                 Text(
                                     "Today",
                                     style = TextStyle(
                                         fontSize = 10.sp,
-                                        color = GlanceTheme.colors.onSurfaceVariant
+                                        color = muted
                                     )
                                 )
                             }
@@ -143,7 +145,7 @@ class StreakWidget : GlanceAppWidget() {
                                 value = s.value,
                                 label = s.label,
                                 accent = accentFor(s.key),
-                                container = GlanceTheme.colors.secondaryContainer
+                                container = container
                             )
                         }
                     }
@@ -154,7 +156,7 @@ class StreakWidget : GlanceAppWidget() {
                             progressLabel,
                             style = TextStyle(
                                 fontSize = 10.sp,
-                                color = GlanceTheme.colors.onSurfaceVariant
+                                color = muted
                             )
                         )
                         Spacer(GlanceModifier.height(4.dp))
@@ -162,7 +164,7 @@ class StreakWidget : GlanceAppWidget() {
                             progress = progress,
                             modifier = GlanceModifier.fillMaxWidth().height(6.dp).cornerRadius(3.dp),
                             color = brandGreen,
-                            backgroundColor = GlanceTheme.colors.surfaceVariant
+                            backgroundColor = border
                         )
                     }
                 }
@@ -171,24 +173,19 @@ class StreakWidget : GlanceAppWidget() {
     }
 
     private fun accentFor(key: String): ColorProvider = when (key) {
-        "water" -> androidx.glance.color.ColorProvider(
-            androidx.compose.ui.graphics.Color(0xFF3593E0),
-            androidx.compose.ui.graphics.Color(0xFF3593E0)
-        )
-        "focus" -> androidx.glance.color.ColorProvider(
-            androidx.compose.ui.graphics.Color(0xFF83D65C),
-            androidx.compose.ui.graphics.Color(0xFF83D65C)
-        )
-        "mood" -> androidx.glance.color.ColorProvider(
-            androidx.compose.ui.graphics.Color(0xFF4FB3A8),
-            androidx.compose.ui.graphics.Color(0xFF4FB3A8)
-        )
-        else -> androidx.glance.color.ColorProvider(
-            androidx.compose.ui.graphics.Color(0xFF83D65C),
-            androidx.compose.ui.graphics.Color(0xFF83D65C)
-        )
+        "water" -> fixed(0xFF3593E0) // RegainAccent2
+        "focus" -> fixed(0xFF83D65C) // RegainAccent
+        "mood" -> fixed(0xFF1BB0B5)  // RegainTeal
+        else -> fixed(0xFF83D65C)
     }
+
+    private fun fixed(argb: Long): ColorProvider = fixedColor(argb)
 }
+
+private fun fixedColor(argb: Long): ColorProvider = androidx.glance.color.ColorProvider(
+    androidx.compose.ui.graphics.Color(argb),
+    androidx.compose.ui.graphics.Color(argb)
+)
 
 @Composable
 private fun MiniStatCard(
@@ -220,7 +217,10 @@ private fun MiniStatCard(
                 label,
                 style = TextStyle(
                     fontSize = 10.sp,
-                    color = GlanceTheme.colors.onSurfaceVariant
+                    color = androidx.glance.color.ColorProvider(
+                        androidx.compose.ui.graphics.Color(0xFFA3ADA0),
+                        androidx.compose.ui.graphics.Color(0xFFA3ADA0)
+                    ) // RegainMuted
                 ),
                 maxLines = 1
             )
