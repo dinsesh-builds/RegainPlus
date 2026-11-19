@@ -36,11 +36,12 @@ class BlockViewModel @Inject constructor(
     fun add(kind: String, name: String) {
         viewModelScope.launch {
             val clean = if (kind == "site") name.trim().removePrefix("http://").removePrefix("https://").removePrefix("www.").substringBefore("/") else name.trim()
+            if (clean.isBlank()) return@launch
             dao.insert(BlockedItem(UUID.randomUUID().toString(), kind, clean, System.currentTimeMillis()))
-            if (kind == "study") {
-                BlockHolder.setStudyAllow((BlockHolder.studyAllow.value + clean).filter { it.isNotBlank() }.toSet(), ctx)
-            } else {
-                BlockHolder.set(setOf(clean), ctx)
+            when (kind) {
+                "study" -> BlockHolder.setStudyAllow((BlockHolder.studyAllow.value + clean).toSet(), ctx)
+                "site" -> BlockHolder.setSites((BlockHolder.sites.value + clean).toSet(), ctx)
+                else -> BlockHolder.set((BlockHolder.blocked.value + clean).toSet(), ctx)
             }
             com.regainplus.service.BlockMonitorService.sync(ctx)
             com.regainplus.RegainPlusApp.syncWatchdog(ctx)
@@ -64,7 +65,11 @@ class BlockViewModel @Inject constructor(
         viewModelScope.launch {
             val item = dao.all().first().firstOrNull { it.id == id } ?: return@launch
             dao.delete(id)
-            if (item.kind == "study") BlockHolder.setStudyAllow(BlockHolder.studyAllow.value - item.name, ctx)
+            when (item.kind) {
+                "study" -> BlockHolder.setStudyAllow(BlockHolder.studyAllow.value - item.name, ctx)
+                "site" -> BlockHolder.setSites(BlockHolder.sites.value - item.name, ctx)
+                else -> BlockHolder.set(BlockHolder.blocked.value - item.name, ctx)
+            }
             com.regainplus.service.BlockMonitorService.sync(ctx)
             com.regainplus.RegainPlusApp.syncWatchdog(ctx)
         }

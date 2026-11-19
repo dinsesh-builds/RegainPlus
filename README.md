@@ -66,6 +66,13 @@ Source history and version tags are kept in this repo (older versions are not re
 
 > If GitHub Releases are created for these tags, the same files can be attached there for easier downloads.
 
+## Project docs
+
+- [CHANGELOG.md](CHANGELOG.md) – release/version history
+- [CONTRIBUTING.md](CONTRIBUTING.md) – development and contribution guidelines
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) – architecture and maintenance notes
+- CI: [Android workflow](.github/workflows/android-ci.yml) builds and runs unit tests on push/PR to `main`
+
 ## Permissions & privacy
 
 Depending on what you enable, the app may ask for accessibility access, display-over-other-apps, usage access, notification access, notification posting, alarms, or battery optimization exemption. These are used for on-device features (blocking, timers, reminders, stats). Data is kept locally by default; export/import is manual.

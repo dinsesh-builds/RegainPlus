@@ -10,7 +10,12 @@ object DbBackup {
     fun backupIfVersionChanged(ctx: Context) {
         try {
             val prefs = ctx.getSharedPreferences("settings", Context.MODE_PRIVATE)
-            val version = ctx.packageManager.getPackageInfo(ctx.packageName, 0).versionCode
+            val pkgInfo = ctx.packageManager.getPackageInfo(ctx.packageName, 0)
+            val version = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+                pkgInfo.longVersionCode.toInt()
+            } else {
+                @Suppress("DEPRECATION") pkgInfo.versionCode
+            }
             val last = prefs.getInt("last_db_version", version)
             if (last == version) return
             val db = ctx.getDatabasePath("regainplus.db")

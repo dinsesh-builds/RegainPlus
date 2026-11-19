@@ -18,17 +18,24 @@ import java.util.concurrent.TimeUnit
 class RegainPlusApp : Application() {
     override fun onCreate() {
         super.onCreate()
-        com.regainplus.util.DbBackup.backupIfVersionChanged(this)
+        val appContext = applicationContext
+        // Best-effort backup before migrations/version changes; run off main thread.
+        Thread({ com.regainplus.util.DbBackup.backupIfVersionChanged(appContext) }, "db-backup").start()
+
         val prefs = getSharedPreferences("settings", MODE_PRIVATE)
         BlockHolder.init(this)
         ShortFormHolder.init(this)
         ScheduleHolder.init(this)
         NotificationBlockHolder.init(this)
         BlockMonitorService.sync(this)
-        com.regainplus.service.FocusAlarmScheduler.rescheduleAll(this)
-        scheduleDailyReminder(this, prefs.getBoolean("notif_daily", true))
-        scheduleRestDayReminder(this, prefs.getBoolean("notif_rest", false))
-        syncWatchdog(this)
+
+        // Non-UI-critical scheduling can be deferred to reduce startup work on main thread.
+        Thread({
+            try { com.regainplus.service.FocusAlarmScheduler.rescheduleAll(appContext) } catch (_: Exception) {}
+            try { scheduleDailyReminder(appContext, prefs.getBoolean("notif_daily", true)) } catch (_: Exception) {}
+            try { scheduleRestDayReminder(appContext, prefs.getBoolean("notif_rest", false)) } catch (_: Exception) {}
+            try { syncWatchdog(appContext) } catch (_: Exception) {}
+        }, "startup-scheduling").start()
     }
 
     companion object {

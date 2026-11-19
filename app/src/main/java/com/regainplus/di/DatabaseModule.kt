@@ -1,7 +1,6 @@
 package com.regainplus.di
 
 import android.content.Context
-import androidx.room.Room
 import com.regainplus.data.db.AppDatabase
 import dagger.Module
 import dagger.Provides
@@ -15,10 +14,7 @@ import javax.inject.Singleton
 object DatabaseModule {
     @Provides
     @Singleton
-    fun provideDb(@ApplicationContext ctx: Context): AppDatabase =
-        Room.databaseBuilder(ctx, AppDatabase::class.java, "regainplus.db")
-            .fallbackToDestructiveMigration()
-            .build()
+    fun provideDb(@ApplicationContext ctx: Context): AppDatabase = AppDatabase.getInstance(ctx)
 
     @Provides fun studyDao(db: AppDatabase) = db.studyDao()
     @Provides fun taskDao(db: AppDatabase) = db.taskDao()

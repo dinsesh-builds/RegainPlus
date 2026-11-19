@@ -19,10 +19,15 @@ object BlockHolder {
 
     fun init(context: Context) {
         val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-        _blocked.value = prefs.getStringSet("blocked_packages", emptySet()) ?: emptySet()
-        _sites.value = prefs.getStringSet("blocked_sites", emptySet()) ?: emptySet()
-        _studyMode.value = prefs.getBoolean("study_mode", false)
-        _studyAllow.value = prefs.getStringSet("study_allow", emptySet()) ?: emptySet()
+        val blockedPkgs = prefs.getStringSet("blocked_packages", emptySet()) ?: emptySet()
+        val blockedSites = prefs.getStringSet("blocked_sites", emptySet()) ?: emptySet()
+        val studyModeOn = prefs.getBoolean("study_mode", false)
+        val studyAllowPkgs = prefs.getStringSet("study_allow", emptySet()) ?: emptySet()
+
+        if (_blocked.value != blockedPkgs) _blocked.value = blockedPkgs
+        if (_sites.value != blockedSites) _sites.value = blockedSites
+        if (_studyMode.value != studyModeOn) _studyMode.value = studyModeOn
+        if (_studyAllow.value != studyAllowPkgs) _studyAllow.value = studyAllowPkgs
     }
 
     fun set(names: Set<String>, context: Context? = null) {
