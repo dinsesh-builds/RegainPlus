@@ -52,7 +52,7 @@ Follow issue reporting guidance. Keep reports concise, cite smallest useful evid
 
 ## Pull Request Readiness
 
-Follow human ownership and readiness. AI-assisted contributions welcome; a human must review and own the final diff.
+Follow human ownership and readiness. Contributions are welcome; a human must review and own the final diff.
 
 ## Safety
 

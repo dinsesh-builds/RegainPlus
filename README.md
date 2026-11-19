@@ -54,6 +54,18 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 
 See [`ios/README.md`](ios/README.md) for the initial iOS version and Xcode setup notes.
 
+## Versions & downloads
+
+Source history and version tags are kept in this repo (older versions are not removed/replaced).
+
+| Version | Platform | Tag | Notes | Download |
+|---|---|---|---|---|
+| v1.0.0 | Android (initial) | `android-v1.0.0` (`db2db4c`) | First Android app version | [`releases/RegainPlus-android-v1.0.0-debug.apk`](releases/RegainPlus-android-v1.0.0-debug.apk) |
+| v2.0.0 | Android (updated) | `android-v2.0.0` (`4aa32de`) | Alarm/widget fixes, UI improvements, curated study resources, and more | [`releases/RegainPlus-android-v2.0.0-debug.apk`](releases/RegainPlus-android-v2.0.0-debug.apk) |
+| v1.0.0 | iOS (initial) | `ios-v1.0.0` (`4aa32de`) | Initial SwiftUI source version (Xcode/macOS needed to build) | [`releases/RegainPlus-ios-v1.0.0-source.zip`](releases/RegainPlus-ios-v1.0.0-source.zip) |
+
+> If GitHub Releases are created for these tags, the same files can be attached there for easier downloads.
+
 ## Permissions & privacy
 
 Depending on what you enable, the app may ask for accessibility access, display-over-other-apps, usage access, notification access, notification posting, alarms, or battery optimization exemption. These are used for on-device features (blocking, timers, reminders, stats). Data is kept locally by default; export/import is manual.
