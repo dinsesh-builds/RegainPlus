@@ -7,12 +7,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.regainplus.data.entity.Task
 import com.regainplus.ui.components.ConfirmDeleteButton
+import com.regainplus.ui.components.ExpandableSection
 import com.regainplus.ui.viewmodel.TaskViewModel
 
 private enum class TaskSection(val label: String) { DAILY("Daily"), WEEKLY("Weekly"), MONTHLY("Monthly") }
@@ -51,32 +51,35 @@ fun TasksScreen(vm: TaskViewModel = hiltViewModel()) {
 
         TaskSection.entries.forEach { section ->
             val sectionTasks = grouped[section].orEmpty()
-            if (sectionTasks.isNotEmpty() || tasks.isEmpty() && section == TaskSection.DAILY) {
-                item(key = "header_${section.name}") {
-                    Spacer(Modifier.height(4.dp))
-                    Text(
-                        "${section.label} (${sectionTasks.size})",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                    Spacer(Modifier.height(4.dp))
-                }
-            }
-            items(sectionTasks, key = { it.id }) { t ->
-                Row(
-                    Modifier.fillMaxWidth().padding(vertical = 2.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Checkbox(checked = t.done, onCheckedChange = { vm.toggle(t) })
-                    Text(
-                        t.title,
-                        modifier = Modifier.weight(1f),
-                        style = if (t.done) MaterialTheme.typography.bodyMedium.copy(textDecoration = TextDecoration.LineThrough)
-                        else MaterialTheme.typography.bodyMedium
-                    )
-                    ConfirmDeleteButton(onConfirm = { vm.delete(t.id) })
+            if (sectionTasks.isNotEmpty() || (tasks.isEmpty() && section == TaskSection.DAILY)) {
+                item(key = "section_${section.name}") {
+                    val doneCount = sectionTasks.count { it.done }
+                    ExpandableSection(
+                        title = section.label,
+                        subtitle = "$doneCount/${sectionTasks.size} done",
+                        initiallyExpanded = section == TaskSection.DAILY
+                    ) {
+                        sectionTasks.forEach { t ->
+                            Row(
+                                Modifier.fillMaxWidth().padding(vertical = 2.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Checkbox(checked = t.done, onCheckedChange = { vm.toggle(t) })
+                                Text(
+                                    t.title,
+                                    modifier = Modifier.weight(1f),
+                                    style = if (t.done) MaterialTheme.typography.bodyMedium.copy(textDecoration = TextDecoration.LineThrough)
+                                    else MaterialTheme.typography.bodyMedium
+                                )
+                                ConfirmDeleteButton(onConfirm = { vm.delete(t.id) })
+                            }
+                        }
+                        if (sectionTasks.isEmpty()) {
+                            Text("No tasks in this section.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
+                    Spacer(Modifier.height(8.dp))
                 }
             }
         }

@@ -19,6 +19,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.regainplus.ui.components.ExpandableSection
 import com.regainplus.ui.viewmodel.BlockViewModel
 import com.regainplus.ui.viewmodel.StudyViewModel
 import java.text.SimpleDateFormat
@@ -154,9 +155,11 @@ fun StudyScreen(studyVm: StudyViewModel = hiltViewModel(), blockVm: BlockViewMod
         }
         Spacer(Modifier.height(16.dp))
 
-        Card(Modifier.fillMaxWidth().padding(horizontal = 20.dp)) {
-            Column(Modifier.padding(12.dp)) {
-                Text("Resource library", style = MaterialTheme.typography.titleMedium)
+        ExpandableSection(
+            title = "Resource library",
+            subtitle = "Links and curated educational videos",
+            modifier = Modifier.padding(horizontal = 20.dp)
+        ) {
                 var resName by remember { mutableStateOf("") }; var resUrl by remember { mutableStateOf("") }
                 val resPrefs = remember { ctx.getSharedPreferences("resources", android.content.Context.MODE_PRIVATE) }
                 var resources by remember { mutableStateOf(resPrefs.getStringSet("links", emptySet()) ?: emptySet()) }
@@ -260,16 +263,18 @@ fun StudyScreen(studyVm: StudyViewModel = hiltViewModel(), blockVm: BlockViewMod
                                 }
                             }
                         }
-                    }
                 }
-            }
+        }
         }
         Spacer(Modifier.height(16.dp))
-        Card(Modifier.fillMaxWidth().padding(horizontal = 20.dp)) {
-            Column(Modifier.padding(12.dp)) {
+        ExpandableSection(
+            title = "Study Mode",
+            subtitle = if (studyMode) "On — distractions blocked" else "Off — add study resources",
+            modifier = Modifier.padding(horizontal = 20.dp)
+        ) {
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
-                        Text("Study Mode", style = MaterialTheme.typography.titleMedium)
+                        Text(if (studyMode) "Blocking distractions" else "Allow only study resources", style = MaterialTheme.typography.titleSmall)
                         Text(
                             if (studyMode) "On — blocks distractions except your study resources"
                             else "Off — add your study resources, blockers stay off",
@@ -295,11 +300,15 @@ fun StudyScreen(studyVm: StudyViewModel = hiltViewModel(), blockVm: BlockViewMod
                         androidx.compose.material3.TextButton(onClick = { blockVm.delete(s.id) }) { Text("Remove") }
                     }
                 }
-            }
         }
         Spacer(Modifier.height(16.dp))
-        Text("History", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(horizontal = 20.dp))
-        sessions.take(8).forEach { s ->
+        ExpandableSection(
+            title = "History",
+            subtitle = "${sessions.size} sessions",
+            modifier = Modifier.padding(horizontal = 20.dp),
+            initiallyExpanded = false
+        ) {
+            sessions.take(8).forEach { s ->
             Card(
                 Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 2.dp),
                 shape = RoundedCornerShape(16.dp),
@@ -326,7 +335,8 @@ fun StudyScreen(studyVm: StudyViewModel = hiltViewModel(), blockVm: BlockViewMod
                 }
             }
         }
-        if (sessions.isEmpty()) Text("No sessions yet. Start one above.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = 20.dp))
+            if (sessions.isEmpty()) Text("No sessions yet. Start one above.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
         Spacer(Modifier.height(24.dp))
     }
 }

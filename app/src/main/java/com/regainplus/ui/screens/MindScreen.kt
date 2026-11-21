@@ -17,6 +17,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.regainplus.ui.components.ExpandableSection
 import com.regainplus.ui.viewmodel.MindViewModel
 import kotlinx.coroutines.delay
 
@@ -66,147 +67,69 @@ fun MindScreen(vm: MindViewModel = hiltViewModel()) {
     ) {
         Text("Mind", style = MaterialTheme.typography.headlineMedium, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
 
-        // Mood
-        Card(
-            Modifier.fillMaxWidth().padding(vertical = 8.dp),
-            shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-        ) {
-            Column(Modifier.padding(16.dp)) {
-                Text("Mood check-in", style = MaterialTheme.typography.titleMedium)
-                Slider(value = mood.toFloat(), onValueChange = { mood = it.toInt() }, valueRange = 1f..5f, steps = 3)
-                OutlinedTextField(value = note, onValueChange = { note = it }, label = { Text("Note") }, modifier = Modifier.fillMaxWidth())
-                Button(onClick = { vm.log(mood, note); note = "" }, modifier = Modifier.padding(top = 8.dp)) { Text("Log") }
-                logs.take(5).forEach { m ->
-                    Text(
-                        "Mood ${m.mood} · ${java.text.SimpleDateFormat("MMM d", java.util.Locale.getDefault()).format(java.util.Date(m.date))}${if (m.note.isNotBlank()) " — ${m.note}" else ""}",
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                }
-                if (logs.isEmpty()) {
-                    Text("No mood logs yet.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-            }
-        }
+        Spacer(Modifier.height(12.dp))
 
-        // Breathing
-        Card(
-            Modifier.fillMaxWidth().padding(vertical = 4.dp),
-            shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-        ) {
-            Column(Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("Breathing 4-7-8", style = MaterialTheme.typography.titleMedium)
-                Text("A calm reset when you feel tense", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Spacer(Modifier.height(16.dp))
-                Box(Modifier.size(180.dp), contentAlignment = Alignment.Center) {
-                    Box(
-                        Modifier
-                            .size(120.dp)
-                            .scale(scale)
-                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.35f), CircleShape)
-                    )
-                    Box(
-                        Modifier
-                            .size((120 * scale).dp.coerceAtMost(170.dp))
-                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f), CircleShape)
-                    )
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(
-                            when (phase) { 0 -> "Inhale"; 1 -> "Hold"; else -> "Exhale" },
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                        if (breathing) {
-                            Text(
-                                "$countdown",
-                                style = MaterialTheme.typography.headlineSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                        } else {
-                            Text(
-                                "4 · 7 · 8",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                }
-                Spacer(Modifier.height(8.dp))
-                Button(onClick = {
-                    breathing = !breathing
-                    if (!breathing) {
-                        phase = 2
-                        countdown = 0
-                    }
-                }) { Text(if (breathing) "Stop" else "Start breathing") }
-            }
-        }
-
-        // Grounding
-        Card(
-            Modifier.fillMaxWidth().padding(vertical = 4.dp),
-            shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-        ) {
-            Column(Modifier.padding(16.dp)) {
-                Text("5-4-3-2-1 grounding", style = MaterialTheme.typography.titleMedium)
-                Text("Use this to come back to the present moment.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Spacer(Modifier.height(8.dp))
-                listOf(
-                    "5 things you can see",
-                    "4 things you can feel",
-                    "3 things you can hear",
-                    "2 things you can smell",
-                    "1 thing you can taste"
-                ).forEach { step ->
-                    Text("• $step", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(vertical = 2.dp))
-                }
-            }
-        }
-
-        // Manipulation defense
-        Card(
-            Modifier.fillMaxWidth().padding(vertical = 4.dp),
-            shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-        ) {
-            Column(Modifier.padding(16.dp)) {
-                Text("Manipulation defense", style = MaterialTheme.typography.titleMedium)
-                val flags = listOf(
-                    "Love bombing: idealize → devalue → discard",
-                    "Gaslighting: you doubt your own memory",
-                    "Intermittent reward: hot-cold creates dependency",
-                    "Coercive control: isolation + monitoring"
+        ExpandableSection("Mood check-in", subtitle = "Log how you feel", initiallyExpanded = true) {
+            Slider(value = mood.toFloat(), onValueChange = { mood = it.toInt() }, valueRange = 1f..5f, steps = 3)
+            OutlinedTextField(value = note, onValueChange = { note = it }, label = { Text("Note") }, modifier = Modifier.fillMaxWidth())
+            Button(onClick = { vm.log(mood, note); note = "" }, modifier = Modifier.padding(top = 8.dp)) { Text("Log") }
+            logs.take(5).forEach { m ->
+                Text(
+                    "Mood ${m.mood} · ${java.text.SimpleDateFormat("MMM d", java.util.Locale.getDefault()).format(java.util.Date(m.date))}${if (m.note.isNotBlank()) " — ${m.note}" else ""}",
+                    style = MaterialTheme.typography.bodySmall
                 )
-                flags.forEach { Text("• $it", style = MaterialTheme.typography.bodySmall) }
-                Spacer(Modifier.height(8.dp))
-                Text("Scripts", style = MaterialTheme.typography.titleSmall)
-                listOf("\"I'm not comfortable with that.\"", "\"Let's slow down.\"", "\"I need time to think.\"").forEach {
-                    Text(it, style = MaterialTheme.typography.bodySmall)
+            }
+            if (logs.isEmpty()) Text("No mood logs yet.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        Spacer(Modifier.height(10.dp))
+
+        ExpandableSection("Breathing 4-7-8", subtitle = "A calm reset when you feel tense") {
+            Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+                Box(Modifier.size(180.dp), contentAlignment = Alignment.Center) {
+                    Box(Modifier.size(120.dp).scale(scale).background(MaterialTheme.colorScheme.primary.copy(alpha = 0.35f), CircleShape))
+                    Box(Modifier.size((120 * scale).dp.coerceAtMost(170.dp)).background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f), CircleShape))
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(when (phase) { 0 -> "Inhale"; 1 -> "Hold"; else -> "Exhale" }, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                        if (breathing) Text("$countdown", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                        else Text("4 · 7 · 8", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
                 }
-                Spacer(Modifier.height(4.dp))
-                Text("Grey rock: stay neutral, don't JADE (justify/argue/defend/explain).", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Spacer(Modifier.height(8.dp))
+                Button(onClick = { breathing = !breathing; if (!breathing) { phase = 2; countdown = 0 } }) { Text(if (breathing) "Stop" else "Start breathing") }
             }
         }
+        Spacer(Modifier.height(10.dp))
 
-        // Sleep hygiene
-        Card(
-            Modifier.fillMaxWidth().padding(vertical = 4.dp),
-            shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-        ) {
-            Column(Modifier.padding(16.dp)) {
-                Text("Sleep hygiene", style = MaterialTheme.typography.titleMedium)
-                listOf(
-                    "Same sleep/wake time daily, even weekends",
-                    "No screens 30-60 min before bed",
-                    "Cool, dark, quiet room",
-                    "Caffeine cutoff 8h before sleep",
-                    "Bed = sleep only (no scrolling)"
-                ).forEach { Text("• $it", style = MaterialTheme.typography.bodySmall) }
+        ExpandableSection("5-4-3-2-1 grounding", subtitle = "Come back to the present moment") {
+            listOf("5 things you can see", "4 things you can feel", "3 things you can hear", "2 things you can smell", "1 thing you can taste").forEach { step ->
+                Text("• $step", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(vertical = 2.dp))
             }
+        }
+        Spacer(Modifier.height(10.dp))
+
+        ExpandableSection("Manipulation defense", subtitle = "Red flags and scripts") {
+            listOf(
+                "Love bombing: idealize → devalue → discard",
+                "Gaslighting: you doubt your own memory",
+                "Intermittent reward: hot-cold creates dependency",
+                "Coercive control: isolation + monitoring"
+            ).forEach { Text("• $it", style = MaterialTheme.typography.bodySmall) }
+            Spacer(Modifier.height(8.dp))
+            Text("Scripts", style = MaterialTheme.typography.titleSmall)
+            listOf("\"I'm not comfortable with that.\"", "\"Let's slow down.\"", "\"I need time to think.\"").forEach { Text(it, style = MaterialTheme.typography.bodySmall) }
+            Spacer(Modifier.height(4.dp))
+            Text("Grey rock: stay neutral, don't JADE (justify/argue/defend/explain).", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        Spacer(Modifier.height(10.dp))
+
+        ExpandableSection("Sleep hygiene", subtitle = "Simple habits for better sleep") {
+            listOf(
+                "Same sleep/wake time daily, even weekends",
+                "No screens 30-60 min before bed",
+                "Cool, dark, quiet room",
+                "Caffeine cutoff 8h before sleep",
+                "Bed = sleep only (no scrolling)"
+            ).forEach { Text("• $it", style = MaterialTheme.typography.bodySmall) }
         }
 
         Spacer(Modifier.height(12.dp))
