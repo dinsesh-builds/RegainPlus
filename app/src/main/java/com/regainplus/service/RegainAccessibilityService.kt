@@ -112,12 +112,12 @@ class RegainAccessibilityService : AccessibilityService() {
     /** Short-form signals inside a specific window's tree (used for PiP / floating). */
     private fun isShortFormWindow(pkg: String, root: AccessibilityNodeInfo): Boolean {
         if (isYouTube(pkg)) {
-            if (findViewId(root, "$pkg:id/reel_recycler") != null) return true
-            if (findViewId(root, "$pkg:id/reel_watch_fragment_root") != null) return true
+            if (hasViewId(root, "$pkg:id/reel_recycler")) return true
+            if (hasViewId(root, "$pkg:id/reel_watch_fragment_root")) return true
         }
         if (isInstagramOrFacebook(pkg)) {
-            if (findViewId(root, "$pkg:id/clips_tab")?.isSelected == true) return true
-            if (findViewId(root, "$pkg:id/like_button")?.isVisibleToUser == true) return true
+            if (viewIdSelected(root, "$pkg:id/clips_tab")) return true
+            if (viewIdVisible(root, "$pkg:id/like_button")) return true
         }
         // This runs only for a short-form app's NON-active window, i.e. PiP /
         // floating video. Player controls there are enough to block.
@@ -229,10 +229,9 @@ class RegainAccessibilityService : AccessibilityService() {
     private fun adultSiteReason(pkg: String, event: AccessibilityEvent): String? {
         if (!getSharedPreferences("settings", Context.MODE_PRIVATE).getBoolean("adult_block", false)) return null
         val root = rootInActiveWindow
-        val urlBar = findViewId(root, "$pkg:id/url_bar")
-            ?: findViewId(root, "$pkg:id/url_bar_title")
-        val text = if (urlBar != null) {
-            "${urlBar.text ?: ""} ${urlBar.contentDescription ?: ""}"
+        val urlBarText = viewIdText(root, "$pkg:id/url_bar") ?: viewIdText(root, "$pkg:id/url_bar_title")
+        val text = if (!urlBarText.isNullOrBlank()) {
+            urlBarText
         } else {
             collectText(event.source, 0, 60) + " " + collectText(root, 0, 100)
         }
@@ -289,11 +288,11 @@ class RegainAccessibilityService : AccessibilityService() {
 
         if (isYouTube(pkg)) {
             // Primary signal: the Shorts feed recycler view (BlockerHero's exact check).
-            if (findViewId(source, "$pkg:id/reel_recycler") != null) return true
-            if (findViewId(rootInActiveWindow, "$pkg:id/reel_recycler") != null) return true
+            if (hasViewId(source, "$pkg:id/reel_recycler")) return true
+            if (hasViewId(rootInActiveWindow, "$pkg:id/reel_recycler")) return true
             // Secondary signals used by newer/older YouTube versions.
-            if (findViewId(source, "$pkg:id/reel_watch_fragment_root") != null) return true
-            if (findViewId(rootInActiveWindow, "$pkg:id/reel_watch_fragment_root") != null) return true
+            if (hasViewId(source, "$pkg:id/reel_watch_fragment_root")) return true
+            if (hasViewId(rootInActiveWindow, "$pkg:id/reel_watch_fragment_root")) return true
             val cls = event.className?.toString()?.lowercase() ?: ""
             if (cls.contains("shorts")) return true
             return false
@@ -304,11 +303,11 @@ class RegainAccessibilityService : AccessibilityService() {
             val cls = event.className?.toString() ?: ""
             if (cls.contains("FbShortsViewerActivity") || cls.lowercase().contains("reel")) return true
             // Selected Reels tab.
-            if (findViewId(source, "$pkg:id/clips_tab")?.isSelected == true) return true
-            if (findViewId(rootInActiveWindow, "$pkg:id/clips_tab")?.isSelected == true) return true
+            if (viewIdSelected(source, "$pkg:id/clips_tab")) return true
+            if (viewIdSelected(rootInActiveWindow, "$pkg:id/clips_tab")) return true
             // Like button visible => inside an open Reel.
-            if (findViewId(source, "$pkg:id/like_button")?.isVisibleToUser == true) return true
-            if (findViewId(rootInActiveWindow, "$pkg:id/like_button")?.isVisibleToUser == true) return true
+            if (viewIdVisible(source, "$pkg:id/like_button")) return true
+            if (viewIdVisible(rootInActiveWindow, "$pkg:id/like_button")) return true
             // Event description "View reels" / "Reels".
             val cd = event.contentDescription?.toString()?.lowercase() ?: ""
             if (cd.contains("reel")) return true
@@ -326,14 +325,33 @@ class RegainAccessibilityService : AccessibilityService() {
     }
 
     /** Find a node by full view-id resource name (requires flagReportViewIds, which is set). */
-    private fun findViewId(node: AccessibilityNodeInfo?, viewId: String): AccessibilityNodeInfo? {
+    private fun <T> withViewId(node: AccessibilityNodeInfo?, viewId: String, block: (AccessibilityNodeInfo) -> T): T? {
         if (node == null) return null
+        var result: T? = null
         try {
             val found = node.findAccessibilityNodeInfosByViewId(viewId)
-            if (!found.isNullOrEmpty()) return found[0]
+            if (!found.isNullOrEmpty()) {
+                try {
+                    result = block(found[0])
+                } finally {
+                    found.forEach { try { it.recycle() } catch (_: Exception) {} }
+                }
+            }
         } catch (_: Exception) {}
-        return null
+        return result
     }
+
+    private fun hasViewId(node: AccessibilityNodeInfo?, viewId: String): Boolean =
+        withViewId(node, viewId) { true } == true
+
+    private fun viewIdSelected(node: AccessibilityNodeInfo?, viewId: String): Boolean =
+        withViewId(node, viewId) { it.isSelected } == true
+
+    private fun viewIdVisible(node: AccessibilityNodeInfo?, viewId: String): Boolean =
+        withViewId(node, viewId) { it.isVisibleToUser } == true
+
+    private fun viewIdText(node: AccessibilityNodeInfo?, viewId: String): String? =
+        withViewId(node, viewId) { "${it.text ?: ""} ${it.contentDescription ?: ""}".trim() }
 
     // ---------- browser / domain blocking ----------
 
@@ -366,9 +384,13 @@ class RegainAccessibilityService : AccessibilityService() {
         for (i in 0 until node.childCount) {
             if (budget <= 0) break
             val child = node.getChild(i) ?: continue
-            val s = collectText(child, depth + 1, budget)
-            sb.append(s).append(' ')
-            budget -= s.length / 8 + 1
+            try {
+                val s = collectText(child, depth + 1, budget)
+                sb.append(s).append(' ')
+                budget -= s.length / 8 + 1
+            } finally {
+                try { child.recycle() } catch (_: Exception) {}
+            }
         }
         return sb.toString()
     }

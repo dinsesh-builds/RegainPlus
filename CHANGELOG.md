@@ -14,9 +14,13 @@ All notable changes to RegainPlus are documented here.
 - Unified Room database singleton usage across DI and direct access paths.
 - Enabled R8 minification and resource shrinking for release builds.
 - Updated version metadata to `2.0.0` (`versionCode` 2) in preparation for ongoing releases.
+- Screen time stats now load off the main thread with a loading state.
 
 ### Fixed
 - Potential duplicate database instance usage between Hilt-provided and manually accessed database singletons.
+- Blocked-item add/delete now updates the correct block/site/study holder state.
+- Accessibility service now recycles accessibility nodes to reduce leak/perf risk during blocking checks.
+- Added required `specialUse` foreground service subtype properties for Android 14+ manifest compliance.
 
 ### Added
 - Continuous alarm ringing service with dismiss action for scheduled focus alarms.

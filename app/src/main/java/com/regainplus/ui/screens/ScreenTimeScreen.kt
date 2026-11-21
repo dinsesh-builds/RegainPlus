@@ -47,7 +47,15 @@ fun ScreenTimeScreen() {
         }
         return
     }
-    val stats = remember(refreshKey) { loadUsage(ctx) }
+    var stats by remember { mutableStateOf<List<AppUsage>>(emptyList()) }
+    var loadingStats by remember { mutableStateOf(true) }
+    LaunchedEffect(refreshKey, hasAccess) {
+        loadingStats = true
+        stats = if (hasAccess) {
+            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { loadUsage(ctx) }
+        } else emptyList()
+        loadingStats = false
+    }
     val totalMs = stats.sumOf { it.usageMs }
     LazyColumn(Modifier.fillMaxSize().padding(16.dp)) {
         item {
@@ -85,7 +93,13 @@ fun ScreenTimeScreen() {
             }
             HorizontalDivider()
         }
-        if (stats.isEmpty()) {
+        if (loadingStats) {
+            item {
+                Box(Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
+            }
+        } else if (stats.isEmpty()) {
             item { Text("No usage data yet. Use some apps and reopen.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
         }
     }
