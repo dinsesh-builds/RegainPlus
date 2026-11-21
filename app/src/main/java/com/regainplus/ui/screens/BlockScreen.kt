@@ -31,6 +31,7 @@ import com.regainplus.service.NotificationBlockHolder
 import com.regainplus.service.ScheduleHolder
 import com.regainplus.service.ShortFormHolder
 import com.regainplus.ui.components.ConfirmDeleteButton
+import com.regainplus.ui.components.ExpandableSection
 import com.regainplus.ui.viewmodel.BlockViewModel
 
 @Composable
@@ -100,8 +101,7 @@ fun BlockScreen(vm: BlockViewModel = hiltViewModel()) {
 
         // Block apps — one tap, no package names
         Spacer(Modifier.height(4.dp))
-        Text("Block apps", style = MaterialTheme.typography.titleMedium)
-        Text("Tap any app on your phone to block or unblock it.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        ExpandableSection("Block apps", subtitle = "Tap to block or unblock apps", initiallyExpanded = true) {
         val blockedPkgs = blockedItems.filter { it.kind == "app" }.map { it.name }.toSet()
         var appSearch by remember { mutableStateOf("") }
         OutlinedTextField(value = appSearch, onValueChange = { appSearch = it }, label = { Text("Search apps") }, modifier = Modifier.fillMaxWidth(), singleLine = true, leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) })
@@ -143,11 +143,11 @@ fun BlockScreen(vm: BlockViewModel = hiltViewModel()) {
             Text("Blocked apps: ${blockedPkgs.joinToString { appLabel(ctx, it, launchers) }}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
             TextButton(onClick = { vm.clearAll() }) { Text("Clear all blocked apps") }
         }
+        }
 
         // Websites (optional, advanced)
         Spacer(Modifier.height(12.dp))
-        Text("Block websites (optional)", style = MaterialTheme.typography.titleSmall)
-        Text("Site entries are matched against browser URLs via accessibility. Use plain domains (e.g. example.com).", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        ExpandableSection("Block websites", subtitle = "Optional domain blocking") {
         Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
             OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Website domain") }, placeholder = { Text("example.com") }, modifier = Modifier.weight(1f).fillMaxHeight(), singleLine = true)
             Button(onClick = { if (name.isNotBlank()) { vm.add("site", name); name = "" } }, modifier = Modifier.fillMaxHeight()) { Text("Add site") }
@@ -158,12 +158,11 @@ fun BlockScreen(vm: BlockViewModel = hiltViewModel()) {
                 ConfirmDeleteButton(onConfirm = { vm.delete(b.id) })
             }
         }
+        }
 
         // P0: Notification blocking
         Spacer(Modifier.height(16.dp))
-        Text("Notification blocking", style = MaterialTheme.typography.titleMedium)
-        Card(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
-            Column(Modifier.padding(12.dp)) {
+        ExpandableSection("Notification blocking", subtitle = if (listenerOn) "Access granted" else "Access needed") {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
                         Text("Block notifications from blocked apps")
@@ -197,13 +196,11 @@ fun BlockScreen(vm: BlockViewModel = hiltViewModel()) {
                     }
                     if (notifInbox.isNotEmpty()) TextButton(onClick = { NotificationBlockHolder.clearInbox(ctx) }) { Text("Clear inbox") }
                 }
-            }
         }
 
         // Adult content filter — one working control (BlockerHero-style URL detection).
         Spacer(Modifier.height(8.dp))
-        Card(Modifier.fillMaxWidth()) {
-            Column(Modifier.padding(12.dp)) {
+        ExpandableSection("Block adult content & permissions", subtitle = if (adultOn) "Adult filter on" else "Filter and permissions") {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
                         Text("Block adult content")
@@ -247,14 +244,11 @@ fun BlockScreen(vm: BlockViewModel = hiltViewModel()) {
                         catch (_: Exception) { ctx.startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
                     }) { Text("Exempt") }
                 }
-            }
         }
 
         // Schedule-based blocking
         Spacer(Modifier.height(16.dp))
-        Text("Schedule-based blocking", style = MaterialTheme.typography.titleMedium)
-        Text("Block an app only during a time window on selected days.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Spacer(Modifier.height(8.dp))
+        ExpandableSection("Schedule-based blocking", subtitle = "Block apps during time windows") {
         Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
             OutlinedTextField(value = schedPkg, onValueChange = { schedPkg = it }, label = { Text("Package") }, modifier = Modifier.weight(1f).fillMaxHeight(), singleLine = true)
             OutlinedButton(onClick = { showPicker = true }, modifier = Modifier.fillMaxHeight()) { Text("Pick") }
@@ -311,6 +305,7 @@ fun BlockScreen(vm: BlockViewModel = hiltViewModel()) {
                     }) { Text("Del") }
                 }
             }
+        }
         }
 
         if (showPicker) {

@@ -11,6 +11,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.regainplus.ui.components.ExpandableSection
 
 data class Tip(val category: String, val title: String, val body: String, val tier: String)
 
@@ -72,11 +73,7 @@ fun GlowUpScreen(navController: androidx.navigation.NavController? = null) {
         Spacer(Modifier.height(12.dp))
 
         // Mission ladder (Regain mission-style)
-        Card(Modifier.fillMaxWidth()) {
-            Column(Modifier.padding(12.dp)) {
-                Text("Mission ladder", style = MaterialTheme.typography.titleMedium)
-                Text("${doneLadder.size}/5 done today", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Spacer(Modifier.height(4.dp))
+        ExpandableSection("Mission ladder", subtitle = "${doneLadder.size}/5 done today", initiallyExpanded = true) {
                 ladder.forEachIndexed { i, name ->
                     val done = doneLadder.contains(name)
                     Row(
@@ -113,13 +110,10 @@ fun GlowUpScreen(navController: androidx.navigation.NavController? = null) {
                         }
                     }
                 }
-            }
         }
         Spacer(Modifier.height(8.dp))
         // Commitment ritual (Regain-style tap-and-hold)
-        Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
-            Column(Modifier.padding(12.dp)) {
-                Text("My commitment", style = MaterialTheme.typography.titleMedium)
+        ExpandableSection("My commitment", subtitle = "Set your intention") {
                 var commitment by remember { mutableStateOf(prefs.getString("commitment", "") ?: "") }
                 OutlinedTextField(value = commitment, onValueChange = { commitment = it; prefs.edit().putString("commitment", it).apply() }, label = { Text("I will use RegainPlus to…") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
                 Spacer(Modifier.height(6.dp))
@@ -138,16 +132,16 @@ fun GlowUpScreen(navController: androidx.navigation.NavController? = null) {
             }
         }
         Spacer(Modifier.height(8.dp))
-
         navController?.let { nc -> Button(onClick = { nc.navigate("palette") }) { Text("Color palette quiz") } }
         Spacer(Modifier.height(8.dp))
-        Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            FilterChip(selected = selected == null, onClick = { selected = null }, label = { Text("All") })
-            cats.forEach { c ->
-                FilterChip(selected = selected == c, onClick = { selected = c }, label = { Text(c) })
+        ExpandableSection("Tips", subtitle = "Evidence-tiered daily tips", initiallyExpanded = true) {
+            Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                FilterChip(selected = selected == null, onClick = { selected = null }, label = { Text("All") })
+                cats.forEach { c ->
+                    FilterChip(selected = selected == c, onClick = { selected = c }, label = { Text(c) })
+                }
             }
-        }
-        Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(8.dp))
         (if (selected == null) tips else tips.filter { it.category == selected }).forEach { t ->
             Card(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
                 Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {

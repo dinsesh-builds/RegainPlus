@@ -15,8 +15,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.regainplus.ui.components.AreaChart
-import com.regainplus.ui.components.ConfirmDeleteButton
 import com.regainplus.ui.components.BarChart
+import com.regainplus.ui.components.ConfirmDeleteButton
+import com.regainplus.ui.components.ExpandableSection
 import com.regainplus.ui.viewmodel.GymViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -52,9 +53,7 @@ fun GymScreen(vm: GymViewModel = hiltViewModel()) {
             val goalPrefs = remember { ctx.getSharedPreferences("gym_goals", android.content.Context.MODE_PRIVATE) }
             var gymGoal by remember { mutableStateOf(goalPrefs.getString("goal", "") ?: "") }
             var blocker by remember { mutableStateOf(goalPrefs.getString("blocker", "") ?: "") }
-            Card(Modifier.fillMaxWidth().padding(horizontal = 16.dp), shape = RoundedCornerShape(20.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
-                Column(Modifier.padding(12.dp)) {
-                    Text("Your gym goal", style = MaterialTheme.typography.titleMedium)
+            ExpandableSection("Your gym goal", subtitle = "Goal and blocker", modifier = Modifier.padding(horizontal = 16.dp)) {
                     OutlinedTextField(value = gymGoal, onValueChange = { gymGoal = it; goalPrefs.edit().putString("goal", it).apply() }, label = { Text("e.g. Bench 60kg × 8") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
                     Spacer(Modifier.height(8.dp))
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -75,17 +74,11 @@ fun GymScreen(vm: GymViewModel = hiltViewModel()) {
                         Spacer(Modifier.height(6.dp))
                         Text("Plan around it: ${when (blocker) { "Time" -> "shorter 20-min sessions"; "Motivation" -> "schedule a workout partner"; "Gym access" -> "bodyweight fallback"; "Injury" -> "mobility work"; else -> "sleep + hydration first" }}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
                     }
-                }
             }
         }
         item { Spacer(Modifier.height(12.dp)) }
         item {
-            Card(
-                Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-            ) {
-                Column(Modifier.padding(12.dp)) {
+            ExpandableSection("Log workout", subtitle = "Track sets and reps", modifier = Modifier.padding(horizontal = 16.dp), initiallyExpanded = true) {
                     Text("Log for", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         listOf("Today", "Yesterday", "2 days").forEachIndexed { i, lbl ->
@@ -137,7 +130,6 @@ fun GymScreen(vm: GymViewModel = hiltViewModel()) {
                     }
                 }
             }
-        }
 
         // Volume area chart (Symmetry-style analytics with % badge)
         item {
@@ -158,8 +150,8 @@ fun GymScreen(vm: GymViewModel = hiltViewModel()) {
                         Spacer(Modifier.height(8.dp))
                         AreaChart(values = volumeByDate.takeLast(14), changePercent = pct, modifier = Modifier.fillMaxWidth())
                     }
-                }
             }
+        }
         }
         // Volume by exercise (bar chart)
         item {

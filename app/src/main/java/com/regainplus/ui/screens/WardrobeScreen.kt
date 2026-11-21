@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.regainplus.ui.viewmodel.OutfitsViewModel
 import com.regainplus.ui.components.ConfirmDeleteButton
+import com.regainplus.ui.components.ExpandableSection
 import com.regainplus.ui.viewmodel.WardrobeViewModel
 
 @Composable
@@ -70,16 +71,18 @@ fun WardrobeScreen(vm: WardrobeViewModel = hiltViewModel(), outfitsVm: OutfitsVi
         Column(Modifier.padding(16.dp).weight(1f).verticalScroll(rememberScrollState())) {
             when (tab) {
                 0 -> {
-                    OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Name") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
-                    Spacer(Modifier.height(8.dp))
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        OutlinedTextField(value = type, onValueChange = { type = it }, label = { Text("Type") }, modifier = Modifier.weight(1f), singleLine = true)
-                        OutlinedTextField(value = color, onValueChange = { color = it }, label = { Text("Color") }, modifier = Modifier.weight(1f), singleLine = true)
-                    }
-                    Spacer(Modifier.height(8.dp))
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                        OutlinedTextField(value = season, onValueChange = { season = it }, label = { Text("Season") }, modifier = Modifier.weight(1f), singleLine = true)
-                        Button(onClick = { if (name.isNotBlank()) { vm.add(name, type, color, season); name = "" } }) { Text("Add") }
+                    ExpandableSection("Add item", subtitle = "Add clothing to your wardrobe") {
+                        OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Name") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
+                        Spacer(Modifier.height(8.dp))
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            OutlinedTextField(value = type, onValueChange = { type = it }, label = { Text("Type") }, modifier = Modifier.weight(1f), singleLine = true)
+                            OutlinedTextField(value = color, onValueChange = { color = it }, label = { Text("Color") }, modifier = Modifier.weight(1f), singleLine = true)
+                        }
+                        Spacer(Modifier.height(8.dp))
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                            OutlinedTextField(value = season, onValueChange = { season = it }, label = { Text("Season") }, modifier = Modifier.weight(1f), singleLine = true)
+                            Button(onClick = { if (name.isNotBlank()) { vm.add(name, type, color, season); name = "" } }) { Text("Add") }
+                        }
                     }
                     Spacer(Modifier.height(6.dp))
                     Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {

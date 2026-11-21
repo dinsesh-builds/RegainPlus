@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import com.regainplus.ui.components.ExpandableSection
 import com.regainplus.ui.navigation.Screen
 import com.regainplus.ui.viewmodel.HomeViewModel
 import androidx.glance.appwidget.updateAll
@@ -190,11 +191,7 @@ fun HomeScreen(
         var editSlot by remember { mutableStateOf<Int?>(null) }
         var display24h by remember { mutableStateOf(schedPrefs.getBoolean("time_24h", false)) }
 
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Text("Suggested schedule", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f))
-            Text("Tap Edit to customize", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
-        Spacer(Modifier.height(4.dp))
+        ExpandableSection("Suggested schedule", subtitle = "Alarms and time slots", initiallyExpanded = true) {
         Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             slotNames.forEachIndexed { i, nm ->
                 Card(
@@ -348,6 +345,7 @@ fun HomeScreen(
                     alarmKey++
                 }, label = { Text(lbl) })
             }
+        }
         }
 
         Spacer(Modifier.height(12.dp))
